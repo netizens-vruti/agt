@@ -8,32 +8,45 @@
 <body>
     
 
-    <input type="file" id="fileInput">
-    <button onclick="sendToBackend()">Upload</button>
+<input type="file" id="fileInput">
+<button onclick="uploadToGitHub()">Upload File</button>
+<p id="result"></p>
 
-    <script>
-        function sendToBackend() {
-            const file = document.getElementById("fileInput").files[0];
-            const reader = new FileReader();
-            
-            reader.onload = function () {
-                fetch('https://agt-drab.vercel.app/api/upload-to-github', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    filename: file.name,
-                    content: btoa(reader.result) // base64 encode the file
-                })
-                })
-                .then(res => res.json())
-                .then(data => console.log(data));
-            };
+<script>
+function uploadToGitHub() {
+  const file = document.getElementById("fileInput").files[0];
+  if (!file) {
+    alert("Please select a file first.");
+    return;
+  }
 
-            reader.readAsBinaryString(file);
-        }
-    </script>
+  const reader = new FileReader();
+  reader.onload = function () {
+    fetch("https://agt-drab.vercel.app/api/upload-to-github", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        filename: file.name,
+        content: btoa(reader.result) // base64 encode file
+      })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.download_url) {
+        document.getElementById("result").innerHTML = `
+          ✅ File uploaded!<br>
+          <a href="${data.download_url}" target="_blank">${data.download_url}</a>
+        `;
+      } else {
+        console.error("Error:", data);
+        document.getElementById("result").innerText = "❌ Upload failed.";
+      }
+    });
+  };
+
+  reader.readAsBinaryString(file);
+}
+</script>
 
 </body>
 </html>
